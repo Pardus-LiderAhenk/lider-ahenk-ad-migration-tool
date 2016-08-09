@@ -1,2 +1,3 @@
 # lider-ahenk-ad-migration-tool
-Lider Ahenk Active Directory migration tool
+
+Active Directory-to-OpenLDAP migration tool

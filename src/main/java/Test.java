@@ -1,11 +1,9 @@
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.directory.api.ldap.model.entry.Attribute;
 import org.apache.directory.api.ldap.model.entry.Entry;
@@ -19,6 +17,7 @@ import tr.org.liderahenk.exceptions.LdapException;
 import tr.org.liderahenk.utils.LdapSearchFilterAttribute;
 import tr.org.liderahenk.utils.LdapUtils;
 import tr.org.liderahenk.utils.PropertyReader;
+import tr.org.liderahenk.utils.RandomStringGenerator;
 
 public class Test {
 
@@ -27,6 +26,7 @@ public class Test {
 	public static void main(String[] args) throws LdapException, Exception {
 
 		BasicConfigurator.configure();
+		RandomStringGenerator random = new RandomStringGenerator(10);
 
 		//
 		// Active directory
@@ -83,24 +83,23 @@ public class Test {
 		// Collect OpenLDAP attributes, so that we can map AD attributes to
 		// them.
 		logger.debug("Collecting attributes in OpenLDAP...");
-		Set<String> validAttrNames = null;
-		Set<String> validObjClsValues = null;
+		ArrayList<String> validAttrNames = null;
+		boolean[] attrUsed = null;
+		ArrayList<String> validObjClsValues = null;
 		List<Entry> oEntries = openLdap.search(oBaseDn, oFilterAttributes, null);
 		if (oEntries != null && !oEntries.isEmpty()) {
 			// Select first entry
 			Entry entry = oEntries.get(0);
 
-			validAttrNames = new HashSet<String>();
-			validObjClsValues = new HashSet<String>();
+			validAttrNames = new ArrayList<String>();
+			validObjClsValues = new ArrayList<String>();
 
 			// Iterate over its each attribute
 			Collection<Attribute> attributes = entry.getAttributes();
 			if (attributes != null) {
 				for (Attribute attribute : attributes) {
-					// Flag current attribute as valid
-					validAttrNames.add(attribute.getId().toLowerCase(Locale.ENGLISH));
-					// If it is an object class, store its valid object class
-					// values as well...
+					// If it is an object class, store only its valid object
+					// class values...
 					if (attribute.getId().equalsIgnoreCase("objectClass")) {
 						for (Value<?> value : attribute) {
 							if (value == null || value.getValue() == null) {
@@ -108,9 +107,14 @@ public class Test {
 							}
 							validObjClsValues.add(value.getValue().toString());
 						}
+					} else {
+						// Flag current attribute as valid
+						validAttrNames.add(attribute.getId().toLowerCase(Locale.ENGLISH));
 					}
 				}
 			}
+
+			attrUsed = new boolean[validAttrNames.size()];
 		}
 
 		// Search user entries in Active Directory
@@ -127,7 +131,13 @@ public class Test {
 				Collection<Attribute> attributes = entry.getAttributes();
 				if (attributes != null) {
 					newAttributes = new HashMap<String, String[]>();
+					newAttributes.put("objectClass", validObjClsValues.toArray(new String[validObjClsValues.size()]));
 					for (Attribute attribute : attributes) {
+						if (attribute.getId().equalsIgnoreCase("objectClass")) {
+							// Ignore object class, use valid OpenLDAP object
+							// classes instead!
+							continue;
+						}
 						// Determine new DN!
 						if (attribute.getId().equalsIgnoreCase(
 								PropertyReader.getInstance().get("open.ldap.new.entry.prefix.attribute"))
@@ -140,8 +150,9 @@ public class Test {
 						String log = "";
 						// Copy this AD attribute only if it has some value AND
 						// it is a valid attribute.
-						if (attribute.size() > 0 && (validAttrNames == null
-								|| validAttrNames.contains(attribute.getId().toLowerCase(Locale.ENGLISH)))) {
+						int index = -1;
+						if (attribute.size() > 0 && (validAttrNames == null || (index = validAttrNames
+								.indexOf(attribute.getId().toLowerCase(Locale.ENGLISH))) > -1)) {
 							String[] attrValues = new String[attribute.size()];
 							int i = 0;
 							for (Value<?> value : attribute) {
@@ -152,9 +163,19 @@ public class Test {
 								log += value.getValue().toString() + " ";
 							}
 							newAttributes.put(attribute.getId(), attrValues);
+							attrUsed[index] = true;
 							logger.debug("Copying new attribute {} = {} for the entry...",
 									new String[] { attribute.getUpId(), log });
 						}
+					}
+				}
+
+				// Check if there is any non-used attributes left.
+				for (int i = 0; i < attrUsed.length; i++) {
+					if (!attrUsed[i]) {
+						// This attribute was not used!
+						String attribute = validAttrNames.get(i);
+						newAttributes.put(attribute, new String[] { random.nextString() });
 					}
 				}
 

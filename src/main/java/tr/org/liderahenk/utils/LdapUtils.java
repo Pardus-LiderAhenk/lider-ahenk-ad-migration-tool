@@ -10,6 +10,7 @@ import org.apache.directory.api.ldap.model.entry.DefaultEntry;
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.entry.ModificationOperation;
 import org.apache.directory.api.ldap.model.entry.Value;
+import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.message.AddRequest;
 import org.apache.directory.api.ldap.model.message.AddRequestImpl;
 import org.apache.directory.api.ldap.model.message.AddResponse;
@@ -29,8 +30,6 @@ import org.apache.directory.ldap.client.api.LdapConnectionConfig;
 import org.apache.directory.ldap.client.api.LdapConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import tr.org.liderahenk.exceptions.LdapException;
 
 public class LdapUtils {
 
@@ -64,7 +63,7 @@ public class LdapUtils {
 	/**
 	 * Create new LDAP entry
 	 */
-	public void addEntry(String newDn, Map<String, String[]> attributes) throws LdapException {
+	public void addEntry(String newDn, Map<String, String[]> attributes) throws Exception {
 
 		LdapConnection connection = null;
 
@@ -91,11 +90,9 @@ public class LdapUtils {
 				return;
 			} else {
 				logger.error("Could not create LDAP entry: {}", ldapResult.getDiagnosticMessage());
-				throw new LdapException(ldapResult.getDiagnosticMessage());
+				throw new LdapException(
+						ldapResult.getDiagnosticMessage() + " " + ldapResult.getResultCode().toString());
 			}
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
@@ -105,21 +102,18 @@ public class LdapUtils {
 	 * Delete specified LDAP entry
 	 * 
 	 * @param dn
-	 * @throws LdapException
+	 * @throws Exception
 	 */
-	public void deleteEntry(String dn) throws LdapException {
+	public void deleteEntry(String dn) throws Exception {
 		LdapConnection connection = getConnection();
 		try {
 			connection.delete(new Dn(dn));
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
 	}
 
-	public void updateEntry(String entryDn, String attribute, String value) throws LdapException {
+	public void updateEntry(String entryDn, String attribute, String value) throws Exception {
 		logger.info("Replacing attribute " + attribute + " value " + value);
 		LdapConnection connection = null;
 
@@ -135,15 +129,12 @@ public class LdapUtils {
 				entry.add(attribute, value);
 				connection.modify(entry, ModificationOperation.REPLACE_ATTRIBUTE);
 			}
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
 	}
 
-	public void updateEntryAddAtribute(String entryDn, String attribute, String value) throws LdapException {
+	public void updateEntryAddAtribute(String entryDn, String attribute, String value) throws Exception {
 		logger.info("Adding attribute " + attribute + " value " + value);
 		LdapConnection connection = null;
 
@@ -160,15 +151,12 @@ public class LdapUtils {
 
 				connection.modify(mr);
 			}
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
 	}
 
-	public void updateEntryRemoveAttribute(String entryDn, String attribute) throws LdapException {
+	public void updateEntryRemoveAttribute(String entryDn, String attribute) throws Exception {
 
 		logger.info("Removing attribute: {}", attribute);
 		LdapConnection connection = null;
@@ -188,16 +176,12 @@ public class LdapUtils {
 
 				connection.modify(entry, ModificationOperation.REMOVE_ATTRIBUTE);
 			}
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
 	}
 
-	public void updateEntryRemoveAttributeWithValue(String entryDn, String attribute, String value)
-			throws LdapException {
+	public void updateEntryRemoveAttributeWithValue(String entryDn, String attribute, String value) throws Exception {
 
 		logger.info("Removing attribute: {}", attribute);
 		LdapConnection connection = null;
@@ -216,9 +200,6 @@ public class LdapUtils {
 
 				connection.modify(entry, ModificationOperation.REPLACE_ATTRIBUTE);
 			}
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
@@ -228,17 +209,33 @@ public class LdapUtils {
 	/**
 	 * @return LDAP root DN
 	 */
-	public Entry getRootDSE() throws LdapException {
+	public Entry getRootDSE() throws Exception {
 		LdapConnection connection = getConnection();
 		Entry entry = null;
 		try {
 			entry = connection.getRootDse();
-		} catch (org.apache.directory.api.ldap.model.exception.LdapException e) {
-			logger.error(e.getMessage(), e);
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
+		return entry;
+	}
+
+	public Entry findEntry(String dn) throws Exception {
+
+		LdapConnection connection = null;
+		Entry entry = null;
+
+		if (dn == null || dn.isEmpty()) {
+			throw new IllegalArgumentException("DN was null!");
+		}
+
+		try {
+			connection = getConnection();
+			entry = connection.lookup(dn);
+		} finally {
+			releaseConnection(connection);
+		}
+
 		return entry;
 	}
 
@@ -249,10 +246,10 @@ public class LdapUtils {
 	 * @param filterAttributes
 	 * @param returningAttributes
 	 * @return
-	 * @throws LdapException
+	 * @throws Exception
 	 */
 	public List<Entry> search(String baseDn, List<LdapSearchFilterAttribute> filterAttributes,
-			String[] returningAttributes) throws LdapException {
+			String[] returningAttributes) throws Exception {
 		List<Entry> result = new ArrayList<Entry>();
 
 		LdapConnection connection = null;
@@ -288,9 +285,6 @@ public class LdapUtils {
 					result.add(((SearchResultEntry) response).getEntry());
 				}
 			}
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-			throw new LdapException(e);
 		} finally {
 			releaseConnection(connection);
 		}
@@ -301,16 +295,12 @@ public class LdapUtils {
 	/**
 	 * 
 	 * @return new LDAP connection
-	 * @throws LdapException
+	 * @throws Exception
 	 */
-	private LdapConnection getConnection() throws LdapException {
+	private LdapConnection getConnection() throws Exception {
 		logger.info("Opening connection.");
 		LdapConnection connection = null;
-		try {
-			connection = pool.getConnection();
-		} catch (Exception e) {
-			throw new LdapException(e);
-		}
+		connection = pool.getConnection();
 		return connection;
 	}
 

@@ -8,7 +8,7 @@ Active Directory-to-OpenLDAP migration tool.
 2. Open Eclipse and import the project into Eclipse as 'Existing Maven Projects'.
 3. Navigate to _lider-ahenk-ad-migration-tool/scripts_ directory and run `build-tool.sh`.
 
-How to Run
+## How to Run
 
 > Make sure you have configured the correct LDAP parameters (host, port, pwd etc) in `config.properties` file.
 

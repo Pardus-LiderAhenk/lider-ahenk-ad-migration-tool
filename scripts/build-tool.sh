@@ -25,6 +25,7 @@ echo "Export path: $EXPORT_PATH"
 echo "Copying generated files to $EXPORT_PATH..."
 mkdir -p "$EXPORT_PATH"
 cp -rf "$PRJ_ROOT_PATH"/target/lider-ahenk*.jar "$EXPORT_PATH"
+cp -rf "$PRJ_ROOT_PATH"/src/main/resources/config.properties "$EXPORT_PATH"
 echo "Copied files."
 
 echo "Built finished successfully!"

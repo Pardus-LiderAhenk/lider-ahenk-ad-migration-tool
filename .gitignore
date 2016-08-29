@@ -9,6 +9,7 @@ target/**
 .settings/**
 workspace/
 workspace/**
+migration.log
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

@@ -1,10 +1,13 @@
 package tr.org.liderahenk.utils;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +40,18 @@ public class PropertyReader {
 		InputStream inp = null;
 
 		try {
-			prop.load(PropertyReader.class.getClassLoader().getResourceAsStream(Constants.FILES.PROPERTIES_FILE));
+			try {
+				logger.info("Trying to read properties.");
+				// Config file is in the same folder as the .jar file!
+				prop.load(new FileInputStream(Constants.FILES.PROPERTIES_FILE));
+			} catch (Exception ex) {
+				// Config file is in the .jar file OR src/main/resources
+				prop.load(PropertyReader.class.getClassLoader().getResourceAsStream(Constants.FILES.PROPERTIES_FILE));
+			}
+			Set<Entry<Object, Object>> entrySet = prop.entrySet();
+			for (Entry<Object, Object> e : entrySet) {
+				logger.info("{}: {}", new Object[] { e.getKey(), e.getValue() });
+			}
 			logger.info("Properties loaded.");
 		} catch (Exception e) {
 			logger.error(e.toString(), e);

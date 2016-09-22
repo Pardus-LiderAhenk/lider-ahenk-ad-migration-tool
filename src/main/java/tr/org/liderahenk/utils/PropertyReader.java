@@ -1,8 +1,6 @@
 package tr.org.liderahenk.utils;
 
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
@@ -37,7 +35,6 @@ public class PropertyReader {
 		logger.info("Trying to load config.properties file.");
 
 		prop = new Properties();
-		InputStream inp = null;
 
 		try {
 			try {
@@ -55,15 +52,7 @@ public class PropertyReader {
 			logger.info("Properties loaded.");
 		} catch (Exception e) {
 			logger.error(e.toString(), e);
-		} finally {
-			if (inp != null) {
-				try {
-					inp.close();
-				} catch (IOException e) {
-				}
-			}
 		}
-
 	}
 
 	public String get(String key) {

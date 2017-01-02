@@ -1,10 +1,10 @@
 # lider-ahenk-ad-migration-tool
 
-Active Directory-to-OpenLDAP migration tool. 
+Active Directory-to-OpenLDAP migration tool.
 
 ## How to Build
 
-1. Clone the project by running `git clone https://github.com/Pardus-Kurumsal/lider-ahenk-ad-migration-tool.git`.
+1. Clone the project by running `git clone https://github.com/Pardus-LiderAhenk/lider-ahenk-ad-migration-tool.git`.
 2. Open Eclipse and import the project into Eclipse as 'Existing Maven Projects'.
 3. Navigate to _lider-ahenk-ad-migration-tool/scripts_ directory and run `build-tool.sh`.
 
@@ -26,11 +26,11 @@ We encourage contributions to the project. To contribute:
 
 ## Other Lider Ahenk Projects
 
-* [Lider Console](https://github.com/Pardus-Kurumsal/lider-console): Administration console built as Eclipse RCP project.
-* [Ahenk](https://github.com/Pardus-Kurumsal/ahenk): Agent service running on remote machines.
-* [Lider Ahenk Installer](https://github.com/Pardus-Kurumsal/lider-ahenk-installer): Installation wizard for Ahenk and Lider (and also its LDAP, database, XMPP servers).
-* [Lider Ahenk Archetype](https://github.com/Pardus-Kurumsal/lider-ahenk-archetype): Maven archetype for easy plugin development.
+* [Lider Console](https://github.com/Pardus-LiderAhenk/lider-console): Administration console built as Eclipse RCP project.
+* [Ahenk](https://github.com/Pardus-LiderAhenk/ahenk): Agent service running on remote machines.
+* [Lider Ahenk Installer](https://github.com/Pardus-LiderAhenk/lider-ahenk-installer): Installation wizard for Ahenk and Lider (and also its LDAP, database, XMPP servers).
+* [Lider Ahenk Archetype](https://github.com/Pardus-LiderAhenk/lider-ahenk-archetype): Maven archetype for easy plugin development.
 
 ## License
 
-Lider Ahenk and its sub projects are licensed under the [LGPL v3](https://github.com/Pardus-Kurumsal/lider-ahenk-ad-migration-tool/blob/master/LICENSE).
+Lider Ahenk and its sub projects are licensed under the [LGPL v3](https://github.com/Pardus-LiderAhenk/lider-ahenk-ad-migration-tool/blob/master/LICENSE).
